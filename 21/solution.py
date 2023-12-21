@@ -82,12 +82,16 @@ if __name__ == "__main__":
     print(len(reachable_plots))
 
     """
-    Notice that target % size = 65. If we take
-    65 + n*size steps, we see a quadratic increase
-    in the number of reachable garden plots.
-    Fit a polynomial f(n) = y such to predict
-    the number of reachable plots at the target
-    number of steps.
+    The grid has a perfect diamond shape where there are no obstables.
+    Since the BFS grows in four directions, this is the kind of shape
+    it would take if there were no obstacles, and the area of the
+    diamond would grow quadratically. Notice that target % size = 65.
+    If we take 65 + n*size steps, we see a quadratic increase in the
+    number of reachable garden plots. As a result, every grid worth
+    of steps (size) repeats the pattern quadratically.
+
+    Fit a polynomial f(n) = y such to predict the number of reachable
+    plots at the target number of steps.
 
     The actual numbers for the fit are:
     n = 0, y = 3752
@@ -95,6 +99,8 @@ if __name__ == "__main__":
     n = 2, y = 93252
     """
     target = 26501365
+    # have to make the grid big enough to support
+    # traveling out farther than one grid size.
     super_grid = make_super_grid(grid, 9)
     y0 = len(bfs(super_grid, target%size))
     y1 = len(bfs(super_grid, target%size+size))
