@@ -81,14 +81,23 @@ if __name__ == "__main__":
     reachable_plots = bfs(grid, 64)
     print(len(reachable_plots))
 
-    # notice that target % size = 65. 
-    # if we take 65 + n*size steps, we notice
-    # a quadratic pattern in the increased of
-    # reachable garden plots. so fit a quadratic
-    # function using the first three points computed
+    """
+    Notice that target % size = 65. If we take
+    65 + n*size steps, we see a quadratic increase
+    in the number of reachable garden plots.
+    Fit a polynomial f(n) = y such to predict
+    the number of reachable plots at the target
+    number of steps.
+
+    The actual numbers for the fit are:
+    n = 0, y = 3752
+    n = 1, y = 33614
+    n = 2, y = 93252
+    """
     target = 26501365
     super_grid = make_super_grid(grid, 9)
     y0 = len(bfs(super_grid, target%size))
     y1 = len(bfs(super_grid, target%size+size))
     y2 = len(bfs(super_grid, target%size+2*size))
+    print(y0, y1, y2)
     print(lagrange_interpolation(y0, y1, y2, 26501365//131))
