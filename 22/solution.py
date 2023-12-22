@@ -158,6 +158,8 @@ def count_chain_reaction(start, labeled_bricks):
         brick = labeled_bricks[queue.get()]
         for label in brick.supported_bricks:
             supported_brick = labeled_bricks[label]
+            # check that the supporting bricks are a subset
+            # of the already fallen/disintegrated
             if supported_brick.supported_by <= fallen_bricks:
                 if label not in fallen_bricks:
                     fallen_bricks.add(label)
