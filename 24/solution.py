@@ -9,7 +9,7 @@ class Stone:
     position: Tuple[int]
     velocity: Tuple[int]
 
-def read_input(input: str) -> List[List[str]]:
+def read_input(input: str) -> List[Stone]:
     with open(input, "r") as f:
         lines = f.read().strip().splitlines()
     stones = []
