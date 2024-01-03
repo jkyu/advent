@@ -1,5 +1,9 @@
 import sys
 
+from dataclasses import dataclass
+from typing import List, Dict
+
+
 def read_input(file):
     with open(file, "r") as f:
         lines = f.read().strip().splitlines()
@@ -7,7 +11,7 @@ def read_input(file):
     for line in lines:
         line = [x.strip() for x in line.split()]
         person = line[0]
-        neighbor = line[-1][:-1] # remove the period
+        neighbor = line[-1][:-1]  # remove the period
         if line[2] == "gain":
             sign = 1
         else:
@@ -18,62 +22,71 @@ def read_input(file):
         happiness[person][neighbor] = happiness_units
     return happiness
 
-def place_person(pairs, seated, arrangement):
-    """
-    Seat people clockwise and count the happiness they
-    get being placed next to the person on their right.
-    Also count the happiness the person on the right
-    gets from having this new person on their left.
 
-    When all people are seated, the first person finally
-    gets to add happiness for the person now on their right.
-    """
-    # all people seated. need to count the happiness from the
-    # first and last person being seated next to each other
-    if len(seated) == len(pairs):
-        first_seated = arrangement[0]
-        last_seated = arrangement[-1]
-        happiness = pairs[last_seated][first_seated]
-        happiness += pairs[first_seated][last_seated]
+@dataclass
+class State:
+    last_seated: str
+    currently_seated: str
+
+    def __hash__(self):
+        return hash((self.last_seated, self.currently_seated))
+
+
+def assign_seat(
+        names: List[str],
+        pairs: Dict[str, Dict[str, int]],
+        seated: List[int],
+        last_seated: str,
+        cache: Dict[State, int],
+) -> int:
+    # base case: everyone is seated. return the happiness
+    # resulting from seating the final person next to the first
+    if all(seated):
+        happiness = pairs[last_seated][names[0]]
+        happiness += pairs[names[0]][last_seated]
         return happiness
 
-    # try all seating arrangements and pick the one 
-    # that results in most happiness
-    happiness_subtotal = -sys.maxsize
-    for person in pairs.keys():
-        # person is already seated. ignore.
-        if person in seated:
+    # the state contains the previous person seated and a bit
+    # string that denotes who has been or remains to be seated
+    state = State(last_seated, "".join(list(map(str, seated))))
+    if state in cache:
+        return cache[state]
+
+    max_happiness = -sys.maxsize
+    for i in range(len(names)):
+        person = names[i]
+        if seated[i] == 1:
             continue
+        # seat the person
+        seated[i] = 1
+        # happiness from seating this person next to the
+        # previously seated person
+        happiness = pairs[person][last_seated] + pairs[last_seated][person]
+        # optimal seating arrangement for the remainder of people
+        happiness += assign_seat(names, pairs, seated, person, cache)
+        max_happiness = max(max_happiness, happiness)
+        # unseat the person to try another arrangement
+        seated[i] = 0
 
-        # happiness resulting from placing current person
-        # next to previously seated person, taking into
-        # account the perspective of both people
-        happiness = pairs[person][arrangement[-1]]
-        happiness += pairs[arrangement[-1]][person]
+    cache[state] = max_happiness
+    return max_happiness
 
-        # seat the person and continue placements with
-        # remaining people. keep the arragement that
-        # generates maximum happiness
-        seated.add(person)
-        arrangement.append(person)
-        happiness += place_person(pairs, seated, arrangement)
-        happiness_subtotal = max(happiness_subtotal, happiness)
-        seated.remove(person)
-        arrangement.pop()
-
-    return happiness_subtotal
 
 def find_optimal_arrangement(pairs):
-    keys = set(happiness_pairs.keys())
-    first = keys.pop()
-    arrangement = [first]
-    seated = set(arrangement)
-    return place_person(pairs, seated, arrangement)
+    keys = list(happiness_pairs.keys())
+    seated = [0 for _ in range(len(keys))]
+    # because the table is round, the first
+    # to be seated does not matter
+    seated[0] = 1
+    cache = {}
+    max_happiness = assign_seat(keys, pairs, seated, keys[0], cache)
+    return max_happiness
+
 
 if __name__ == "__main__":
     happiness_pairs = read_input(sys.argv[1])
-    happiness = find_optimal_arrangement(happiness_pairs)
-    print(happiness)
+    optimal_happiness = find_optimal_arrangement(happiness_pairs)
+    print(optimal_happiness)
 
     # add self to happiness graph
     me = "Me"
@@ -81,5 +94,5 @@ if __name__ == "__main__":
     for name in happiness_pairs:
         happiness_pairs[name][me] = 0
         happiness_pairs[me][name] = 0
-    happiness = find_optimal_arrangement(happiness_pairs)
-    print(happiness)
+    optimal_happiness = find_optimal_arrangement(happiness_pairs)
+    print(optimal_happiness)
